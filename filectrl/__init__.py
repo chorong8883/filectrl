@@ -6,20 +6,21 @@ class WriteType(enum.Enum):
     Text = 0
     Data = 1
 
+__caller_code_key = '1.^.self.caller_path'
+
 class FileController:
     def __init__(self, write_type:WriteType, **kwargs) -> None:
         self.data_separator = ','
         self.file_name = ''
         self.file_type = 'log'
         self.logging_path = '.'
-        self.logged_path = 'logs'
+        self.backup_path = 'logs'
         
         self.__write_type = write_type
         self.__excuted_path = ''
         self.__caller_path = ''
         
-        
-        if '__^caller_path' in kwargs:
+        if __caller_code_key in kwargs:
             self.__caller_path = kwargs['__^caller_path']
             caller_path_split = self.__caller_path.split('/')
             self.file_name = caller_path_split[-2]
@@ -37,11 +38,13 @@ class FileController:
         if 'logging_path' in kwargs:
             self.__excuted_path = self.__convert_absolute_path(self.__caller_path, kwargs['logging_path'])
             self.logging_path = self.__excuted_path
-        
-        if 'logged_path' in kwargs:
-            self.logged_path = self.__convert_absolute_path(self.__caller_path, kwargs['logged_path'])
         else:
-            self.logged_path = self.__convert_absolute_path(self.__caller_path, self.logged_path)
+            self.logging_path = self.__convert_absolute_path(self.__caller_path, self.logging_path)
+        
+        if 'backup_path' in kwargs:
+            self.backup_path = self.__convert_absolute_path(self.__caller_path, kwargs['backup_path'])
+        else:
+            self.backup_path = self.__convert_absolute_path(self.__caller_path, self.backup_path)
         
          
     def write(self, *args, **kwargs):
@@ -65,16 +68,15 @@ class FileController:
             f.write(f"{joins}\n")
         
     def __write_data(self, *args, **kwargs):
-        print(f"args : {type(args)} {args}")
-        print(f"str : {type(joins)} {joins}")
-        print(f"kwargs : {type(kwargs)} {kwargs}")
-        
         data_list = []
         for arg in args:
             data_list.append(str(arg))
-        joins = self.data_separator.join(data_list)
-        print(joins)
+        for key, val in kwargs.items():
+            data_list.append(f"{{{key} : {val}}}")
         
+        joins = self.data_separator.join(data_list)
+        with open(f"{self.logging_path}/{self.file_name}.{self.file_type}", 'a') as f:
+            f.write(f"{joins}\n")
         
     def __convert_absolute_path(self, caller_file_path:str, src_path:str) -> str:
         dst_path = src_path
@@ -103,8 +105,6 @@ class FileController:
             
         return dst_path
         
-        
-        
 def get_controller(write_type:WriteType=WriteType.Text, **kwargs):
     '''
     Parameters
@@ -114,9 +114,9 @@ def get_controller(write_type:WriteType=WriteType.Text, **kwargs):
     file_name (str): log file name. (default: ''; project directory name)\n
     file_type (str): log file extension name. (default: 'log')\n
     logging_path (str): logging path (default: '.')\n
-    logged_path (str): Save path for logged file. (default: './logs')\n
+    backup_path (str): Backup path for logged file. (default: './logs')\n
 
     '''
     stacks = inspect.stack()
-    kwargs['__^caller_path'] = stacks[1].filename
+    kwargs[__caller_code_key] = stacks[1].filename
     return FileController(write_type, **kwargs)
