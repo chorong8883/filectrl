@@ -21,7 +21,7 @@ class FileController:
         self.__caller_path = ''
         
         if __caller_code_key in kwargs:
-            self.__caller_path = kwargs['__^caller_path']
+            self.__caller_path = kwargs[__caller_code_key]
             caller_path_split = self.__caller_path.split('/')
             self.file_name = caller_path_split[-2]
             self.__excuted_path = '/'.join(caller_path_split[:-1])
