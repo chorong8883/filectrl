@@ -6,9 +6,10 @@ class WriteType(enum.Enum):
     Text = 0
     Data = 1
 
-__caller_code_key = '1.^.self.caller_path'
+
 
 class FileController:
+    __caller_code_key = '1.^.self.caller_path'
     def __init__(self, write_type:WriteType, **kwargs) -> None:
         self.data_separator = ','
         self.file_name = ''
@@ -20,8 +21,8 @@ class FileController:
         self.__excuted_path = ''
         self.__caller_path = ''
         
-        if __caller_code_key in kwargs:
-            self.__caller_path = kwargs[__caller_code_key]
+        if self.__caller_code_key in kwargs:
+            self.__caller_path = kwargs[self.__caller_code_key]
             caller_path_split = self.__caller_path.split('/')
             self.file_name = caller_path_split[-2]
             self.__excuted_path = '/'.join(caller_path_split[:-1])
@@ -115,8 +116,8 @@ def get_controller(write_type:WriteType=WriteType.Text, **kwargs):
     file_type (str): log file extension name. (default: 'log')\n
     logging_path (str): logging path (default: '.')\n
     backup_path (str): Backup path for logged file. (default: './logs')\n
-
     '''
+    __caller_code_key = '1.^.self.caller_path'
     stacks = inspect.stack()
     kwargs[__caller_code_key] = stacks[1].filename
     return FileController(write_type, **kwargs)
